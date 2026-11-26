@@ -20,11 +20,11 @@ Diseñar e implementar una arquitectura de datos basada en **Apache Cassandra**,
 ## 3. Objetivos específicos
 
 - Extraer, limpiar, transformar y preparar los datos de los archivos CSV con un pipeline automatizado en Python.
-- Transportar los datos limpios mediante mensajería confiable con RabbitMQ: confirmación de publicación, reintentos, cola de errores (DLQ) y procesamiento idempotente.
+- Transportar los datos limpios mediante mensajería confiable con RabbitMQ: confirmación de publicación, reintentos, cola de errores (DLQ) y escrituras sin duplicados.
 - Modelar el almacenamiento NoSQL en Apache Cassandra estrictamente a partir de los patrones de consulta requeridos.
 - Construir un **Data Mart NoSQL orientado a consultas** con tablas desnormalizadas y agregados precalculados, sin JOINs en tiempo de lectura.
-- Exponer las consultas analíticas mediante un backend .NET con CQRS y notificaciones en tiempo real.
-- Visualizar los resultados en un dashboard Blazor. Este incluye un **Centro de Mensajería** que hace observable el flujo transaccional.
+- Exponer las consultas analíticas desde una aplicación .NET que separa escritura (consumidores) y lectura (consultas).
+- Visualizar los resultados en un dashboard Blazor. Este incluye una vista de **Mensajería** que hace visible el flujo transaccional.
 
 ## 4. Especificación y análisis de la fuente de datos
 
@@ -55,63 +55,66 @@ Las tablas se relacionan uno a muchos (1:N) por `id`: un título de `titles.csv`
 
 ### 4.4 Del modelo relacional al Data Mart NoSQL
 
-Cassandra no admite `JOIN` ni `GROUP BY` entre particiones, así que **no se usa un esquema estrella clásico**. El Data Mart se construye con dos tipos de tabla:
-- **Tablas por consulta:** el título con su reparto embebido, títulos por género, por país y por tipo y década, y la filmografía por persona.
-- **Agregados precalculados por el ETL:** KPIs, estrenos por año, género × década, países, clasificación, top personas y rankings.
+Cassandra no admite `JOIN` ni `GROUP BY` entre particiones, así que **no se usa un esquema estrella clásico**. El Data Mart tiene 9 tablas de dos tipos:
+- **Tablas por consulta:** el título con su reparto embebido, los títulos por género y la filmografía por persona.
+- **Agregados precalculados por el ETL:** KPIs, estrenos por año, totales por género y por país, rankings y top personas.
 
-Cada gráfica del dashboard se resuelve leyendo **una sola partición**. El modelo completo está en el [diseño (D6)](openspec/changes/netflix-analytics-platform/design.md).
+Cada gráfica del dashboard se resuelve leyendo **una sola partición**. El modelo completo está en el [diseño (D5)](openspec/changes/netflix-analytics-platform/design.md).
 
 ## 5. Stack tecnológico
 
 | Componente | Rol en la arquitectura | Descripción |
 |---|---|---|
-| **Python** (pandas, pika) | Capa de procesamiento (ETL) | Extrae `titles.csv` y `credits.csv`, los limpia, valida y transforma, calcula agregados y publica mensajes confirmados en RabbitMQ. |
-| **RabbitMQ** + **MassTransit 8** | Capa de mensajería transaccional | Exchange por tema, colas durables (quorum), publisher confirms, reintentos con backoff exponencial, cola de errores (DLQ) y consumidores idempotentes. |
-| **Apache Cassandra 5** | Capa de almacenamiento NoSQL | Data Mart orientado a consultas: tablas desnormalizadas, UDT para el reparto embebido, agregados precalculados y control de ingesta. |
-| **.NET 10** (ASP.NET Core, SignalR) | Capa de servicios | Worker de ingesta, consultas CQRS (clases propias), Minimal API REST con OpenAPI y hub SignalR para eventos en vivo. |
-| **Blazor Web App** (Interactive Server) + MudBlazor + ApexCharts | Capa de presentación | Dashboard oscuro estilo Netflix con 7 vistas, actualización en tiempo real y Centro de Mensajería. |
-| **Docker Compose** | Infraestructura local | Levanta Cassandra, RabbitMQ, el ETL, el worker de ingesta y la aplicación web con un solo comando. |
+| **Python** (pandas, pika) | Capa de procesamiento (ETL) | Extrae `titles.csv` y `credits.csv`, los limpia, calcula agregados y publica mensajes confirmados en RabbitMQ. |
+| **RabbitMQ** + **MassTransit 8** | Capa de mensajería transaccional | Un exchange y dos colas durables, publisher confirms, reintentos y cola de errores (DLQ) automática. |
+| **Apache Cassandra 5** | Capa de almacenamiento NoSQL | Data Mart orientado a consultas: tablas desnormalizadas con escrituras idempotentes (upsert por clave) y agregados precalculados. |
+| **.NET 10** (una sola aplicación) | Capa de servicios | Los consumidores de RabbitMQ escriben en Cassandra y los servicios de consulta solo leen. |
+| **Blazor Web App** (Interactive Server) + MudBlazor + ApexCharts | Capa de presentación | Dashboard oscuro estilo Netflix con 5 vistas, actualizado en tiempo real, incluida la vista **Mensajería**. |
+| **Docker Compose** | Infraestructura local | Levanta Cassandra, RabbitMQ y la aplicación. El ETL se ejecuta con un comando. |
 
 ## 6. Arquitectura del flujo de datos
 
 | Fase del flujo | Componente / herramienta | Descripción técnica de la etapa |
 |---|---|---|
 | 1. Origen de datos | Archivos CSV (Kaggle) | Ingesta de los archivos fuente `titles.csv` y `credits.csv`. |
-| 2. Pipeline ETL | Python | Extracción, limpieza, validación, embebido del reparto y cálculo de agregados. |
-| 3. Mensajería transaccional | RabbitMQ + MassTransit | Publicación confirmada, enrutamiento por tema, reintentos, DLQ y entrega idempotente a los consumidores .NET. |
-| 4. Modelado NoSQL / Data Mart | Apache Cassandra | Escritura en tablas desnormalizadas orientadas a consultas y en tablas de agregados precalculados. |
-| 5. Servicios | .NET (CQRS, Minimal API, SignalR) | Consultas por clave de partición y difusión en tiempo real de los eventos de ingesta y las métricas de colas. |
-| 6. Explotación | Blazor | Dashboard interactivo: Resumen, Géneros, Países, Ranking, Catálogo, Personas y Centro de Mensajería. |
+| 2. Pipeline ETL | Python | Limpieza, validación, embebido del reparto y cálculo de agregados. |
+| 3. Mensajería transaccional | RabbitMQ + MassTransit | Publicación confirmada, colas durables, reintentos y DLQ. |
+| 4. Data Mart NoSQL | Apache Cassandra | Escritura idempotente en tablas orientadas a consultas y en tablas de agregados. |
+| 5. Explotación | .NET + Blazor | Consultas por clave de partición y dashboard: Resumen, Catálogo, Ranking, Personas y Mensajería. |
 
 ## 7. Arquitectura propuesta
 
 ```mermaid
 flowchart LR
     CSV[("CSV Kaggle<br/>titles · credits")] --> ETL["ETL Python<br/>limpieza · agregados"]
-    ETL -- "publisher confirms" --> MQ{{"RabbitMQ<br/>netflix.catalog"}}
-    MQ --> ING["Worker .NET<br/>consumidores idempotentes"]
-    MQ -. "falla permanente" .-> DLQ["Cola de errores<br/>(DLQ)"]
-    ING --> CAS[("Cassandra<br/>Data Mart NoSQL")]
-    ING -- "eventos de ingesta" --> WEB
-    CAS --> WEB["Backend .NET<br/>CQRS · API · SignalR"]
-    WEB --> UI["Dashboard Blazor<br/>+ Centro de Mensajería"]
-    UI -- "comandos (ingestar, demo)" --> MQ
+    ETL -- "publisher confirms" --> MQ{{"RabbitMQ<br/>2 colas durables"}}
+    MQ -. "falla tras reintentos" .-> DLQ["Cola de errores<br/>(DLQ)"]
+    subgraph APP["Aplicación .NET"]
+        C["Consumidores<br/>(escriben)"]
+        Q["Consultas<br/>(leen)"]
+        UI["Dashboard Blazor"]
+    end
+    MQ --> C
+    C --> CAS[("Cassandra<br/>Data Mart NoSQL")]
+    CAS --> Q --> UI
+    C -- "eventos en vivo" --> UI
 ```
 
-Solo hay **un camino de escritura**: Python → RabbitMQ → consumidor .NET → Cassandra. La aplicación web solo lee de Cassandra, y sus acciones (iniciar ingesta y escenarios de demo) se envían como mensajes. El diagrama detallado está en el [documento de diseño](openspec/changes/netflix-analytics-platform/design.md).
+Solo hay **un camino de escritura**: Python → RabbitMQ → consumidor .NET → Cassandra. El dashboard solo lee de Cassandra. El diagrama detallado está en el [documento de diseño](openspec/changes/netflix-analytics-platform/design.md).
 
 ### 7.1 Visibilidad de la mensajería
 
-La vista **Centro de Mensajería** muestra en tiempo real:
-- la topología animada ETL → exchange → colas → consumidor → Cassandra;
-- los mensajes listos y sin confirmar por cola, y las tasas de publicación y entrega;
-- el progreso de la corrida, un feed de eventos y el panel de la cola de errores.
+La vista **Mensajería** muestra en tiempo real:
+- un diagrama de colas con sus mensajes en espera;
+- la tasa de mensajes por segundo;
+- el progreso de la carga;
+- un feed de eventos.
 
-Incluye controles de demostración:
-- **pausar el consumidor:** los mensajes se acumulan sin perderse;
-- **inyectar un mensaje corrupto:** termina en la DLQ;
-- **simular una falla transitoria:** se ven los reintentos con backoff;
-- **reenviar un duplicado:** la idempotencia lo descarta.
+Tiene dos botones de demostración:
+- **Inyectar corrupto:** el mensaje se reintenta y termina en la cola de errores.
+- **Reenviar duplicado:** no se duplica nada, porque Cassandra hace upsert por clave.
+
+Para demostrar la durabilidad basta con `docker compose stop app`: los mensajes se acumulan en la cola sin perderse y se procesan al volver a arrancar.
 
 ### 7.2 Diagrama original del curso
 
@@ -132,35 +135,33 @@ gantt
 
     section Equipo completo
     Kickoff y definición de arquitectura        :done, t1, 2026-11-03, 2d
-    Integración y pruebas end-to-end            :t2, 2026-11-23, 2d
-    Guion de demo, README final y ensayo        :t3, 2026-11-25, 2d
+    Integración y pruebas                   :t2, 2026-11-23, 2d
+    Guion de demo, README y ensayo          :t3, 2026-11-25, 2d
     Entrega                                     :milestone, crit, m1, 2026-11-27, 0d
 
     section Diana Paola Montes · Datos y ETL
-    Análisis y perfilado de datasets            :d1, 2026-11-05, 2d
-    Docker Compose y schema CQL                 :d2, 2026-11-09, 2d
-    ETL extracción y limpieza                   :d3, 2026-11-11, 3d
-    Agregados y reporte de calidad              :d4, 2026-11-16, 2d
-    Publisher con confirms y modo listen        :crit, d5, 2026-11-18, 3d
+    Análisis de datasets                        :d1, 2026-11-05, 2d
+    Docker Compose y schema CQL             :d2, 2026-11-09, 2d
+    ETL limpieza y reparto                  :d3, 2026-11-11, 3d
+    Agregados                               :d4, 2026-11-16, 2d
 
     section Jonathan Cervantes · Mensajería
-    Topología RabbitMQ y contratos              :j1, 2026-11-05, 2d
-    Consumidores MassTransit                    :j2, 2026-11-09, 5d
-    Idempotencia, reintentos y DLQ              :crit, j3, 2026-11-16, 3d
-    Pausa, faults y escenarios de demo          :j4, 2026-11-19, 2d
+    Colas y contratos de mensajes               :j1, 2026-11-05, 2d
+    Publisher Python con confirms           :j2, 2026-11-09, 2d
+    Consumidores y escritura en Cassandra   :crit, j3, 2026-11-11, 5d
+    Botones de demo, DLQ y duplicados       :j4, 2026-11-18, 3d
 
     section Fernanda Baez · Backend .NET
-    Solución .NET y CQRS propio                 :f1, 2026-11-05, 2d
-    Repositorios Cassandra                      :f2, 2026-11-09, 4d
-    Queries y Minimal API                       :f3, 2026-11-13, 4d
-    SignalR, poller de colas y health           :f4, 2026-11-19, 2d
+    App .NET y conexión a Cassandra         :f1, 2026-11-05, 2d
+    Servicios de consulta                   :f2, 2026-11-09, 5d
+    Caché del catálogo                      :f3, 2026-11-16, 2d
+    LiveEvents y poller de colas            :f4, 2026-11-18, 3d
 
     section Ximena Jasso · Frontend Blazor
     Mockups y tema visual                       :x1, 2026-11-05, 2d
-    Layout MudBlazor y Resumen                  :x2, 2026-11-09, 4d
-    Catálogo, Géneros y Países                  :x3, 2026-11-13, 4d
-    Ranking, Personas y responsive              :x4, 2026-11-19, 2d
-    Centro de Mensajería                        :crit, x5, 2026-11-23, 2d
+    Layout y vista Resumen                  :x2, 2026-11-09, 5d
+    Catálogo, Ranking y Personas            :x3, 2026-11-16, 5d
+    Vista Mensajería                        :crit, x4, 2026-11-23, 2d
 ```
 
 Los hitos, la ruta crítica y el detalle de tareas están en [`cronograma.md`](openspec/changes/netflix-analytics-platform/cronograma.md) y [`tasks.md`](openspec/changes/netflix-analytics-platform/tasks.md).
@@ -171,7 +172,7 @@ Los hitos, la ruta crítica y el detalle de tareas están en [`cronograma.md`](o
 
 - **Diana Paola Montes:** Líder de Datos NoSQL & Pipeline ETL (Cassandra, Docker y Python).
 - **Jonathan Cervantes:** Ingeniero de Mensajería & Consumidores (RabbitMQ, MassTransit e Idempotencia).
-- **Fernanda Baez:** Ingeniera de Backend .NET & APIs (ASP.NET Core, CQRS propio y SignalR).
+- **Fernanda Baez:** Ingeniera de Backend .NET & APIs (ASP.NET Core y Cassandra).
 - **Ximena Jasso:** Ingeniera de Frontend Blazor & UI/UX (Blazor Interactive Server, MudBlazor y Validación).
 
 ## 10. Documentación
@@ -179,7 +180,7 @@ Los hitos, la ruta crítica y el detalle de tareas están en [`cronograma.md`](o
 | Documento | Contenido |
 |---|---|
 | [Propuesta](openspec/changes/netflix-analytics-platform/proposal.md) | Por qué, qué cambia, capacidades e impacto |
-| [Diseño](openspec/changes/netflix-analytics-platform/design.md) | Arquitectura, topología RabbitMQ, modelo Cassandra, decisiones, riesgos y mockups |
-| [Especificaciones](openspec/changes/netflix-analytics-platform/specs/) | `etl-pipeline`, `messaging-ingestion`, `cassandra-data-mart`, `analytics-api`, `dashboard-ui`, `messaging-center-ui` |
+| [Diseño](openspec/changes/netflix-analytics-platform/design.md) | Arquitectura, colas, modelo Cassandra, decisiones y mockups |
+| [Especificaciones](openspec/changes/netflix-analytics-platform/specs/) | `etl-pipeline`, `messaging-ingestion`, `cassandra-data-mart`, `dashboard-ui` |
 | [Tareas](openspec/changes/netflix-analytics-platform/tasks.md) | Plan de implementación por integrante, con verificación por tarea |
 | [Cronograma](openspec/changes/netflix-analytics-platform/cronograma.md) | Gantt, hitos y ruta crítica |

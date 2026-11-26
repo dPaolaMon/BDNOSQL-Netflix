@@ -2,39 +2,39 @@
 
 ## Why
 
-El catálogo público de Netflix (Kaggle) llega como dos CSV planos: `titles.csv` con 6,137 títulos y `credits.csv` con 81,355 créditos. Contestar preguntas analíticas sobre ellos exige cruzarlos y agregarlos. En un esquema relacional eso se resuelve con JOINs y GROUP BY costosos, y la carga de datos queda acoplada a las lecturas. El curso de Bases de Datos NoSQL pide demostrar un modelo **orientado a consultas** en Apache Cassandra, alimentado por un ETL en Python, con un backend .NET y una ingesta **transaccional** por mensajería. La propuesta original (README) era vaga: mencionaba un "Data Mart" en sentido relacional y Power BI como capa de presentación. Hay que redefinir el alcance antes de construir.
+El catálogo público de Netflix (Kaggle) llega como dos CSV planos: `titles.csv` con 6,137 títulos y `credits.csv` con 81,355 créditos. Contestar preguntas analíticas sobre ellos exige cruzarlos y agregarlos, lo que en un esquema relacional implica JOINs y GROUP BY costosos.
+
+El curso de Bases de Datos NoSQL pide demostrar tres cosas:
+- un modelo **orientado a consultas** en Apache Cassandra, alimentado por un ETL en Python;
+- un backend .NET;
+- una ingesta **transaccional** por mensajería.
+
+La propuesta original (README) era vaga: mencionaba un "Data Mart" relacional y Power BI. Hay que redefinir el alcance **de la forma más simple que cumpla los requisitos**.
 
 ## What Changes
 
-- **Pipeline ETL en Python:** extrae ambos CSV y los limpia:
-  - colecciones serializadas como texto (`"['drama', 'sport']"`);
-  - nulos en `imdb_score` (468), `age_certification` (2,743) y `seasons` (solo aplica a series);
-  - `runtime = 0`;
-  - textos vacíos.
-
-  Después embebe el reparto en cada título, precalcula agregados y publica el resultado como mensajes.
-- **Ingesta transaccional con RabbitMQ + MassTransit:**
-  - publisher confirms, colas durables, reintentos con backoff y cola de errores (DLQ);
-  - consumidores .NET **idempotentes**: reprocesar un mensaje no duplica datos.
-- **Data Mart NoSQL orientado a consultas en Cassandra.** Reemplaza al "Data Mart" relacional del README:
-  - una tabla desnormalizada por cada consulta del dashboard;
-  - tablas de agregados precalculados (KPIs, por año, por género×década, por país, top personas);
-  - sin JOINs en tiempo de lectura.
-- **Backend .NET 10:** consultas CQRS con clases propias (sin MediatR), Minimal API REST y hub SignalR para eventos en tiempo real.
-- **Dashboard Blazor (Interactive Server + MudBlazor + ApexCharts):** tema oscuro estilo Netflix con siete vistas: Resumen, Géneros, Países, Ranking, Catálogo, Personas y **Centro de Mensajería**. Esta última hace visible el flujo de mensajes (topología animada, tasas de colas, feed, DLQ y controles de demostración).
-- **Despliegue local con Docker Compose:** Cassandra, RabbitMQ con Management, inicialización del esquema, ETL, Worker de ingesta y aplicación web.
-- **Se eliminan del alcance:** Power BI y el modelado dimensional en estrella.
+- **ETL en Python:** lee ambos CSV, los limpia (colecciones serializadas como texto, nulos, valores inválidos), embebe el reparto en cada título, precalcula agregados y publica todo en RabbitMQ con confirmación de entrega.
+- **Mensajería con RabbitMQ + MassTransit:**
+  - un exchange y dos colas durables (títulos y agregados);
+  - reintentos simples y una cola de errores (DLQ) automática;
+  - escrituras idempotentes por clave: un mensaje repetido no duplica datos.
+- **Data Mart NoSQL orientado a consultas en Cassandra.** Reemplaza al "Data Mart" relacional: 9 tablas, cada una diseñada para una pantalla, sin JOINs.
+- **Una sola aplicación .NET 10:**
+  - aloja los consumidores, que son el único punto que escribe en Cassandra;
+  - aloja los servicios de consulta, que solo leen;
+  - aloja el dashboard Blazor (Interactive Server + MudBlazor + ApexCharts).
+- **Dashboard oscuro estilo Netflix con 5 vistas:** Resumen, Catálogo, Ranking, Personas y **Mensajería**. Esta última muestra en vivo las colas, la tasa de mensajes y un feed de eventos, con dos botones de demo: mensaje corrupto → DLQ, y mensaje duplicado → sin duplicar.
+- **Docker Compose:** levanta Cassandra, RabbitMQ y la app. El ETL se ejecuta bajo demanda.
+- **Se elimina del alcance:** Power BI y el modelado dimensional en estrella.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `etl-pipeline`: extracción, limpieza, validación, transformación y cálculo de agregados del catálogo en Python, y publicación de los resultados como mensajes.
-- `messaging-ingestion`: topología RabbitMQ, contratos de mensajes y consumidores .NET idempotentes que persisten en Cassandra, con reintentos, DLQ y eventos de progreso.
-- `cassandra-data-mart`: keyspace, tipos (UDT) y tablas orientadas a consultas, más tablas de agregados y de control de ingesta en Cassandra.
-- `analytics-api`: consultas CQRS sobre el Data Mart expuestas por Minimal API, y hub SignalR para notificaciones en vivo.
-- `dashboard-ui`: vistas analíticas en Blazor (Resumen, Géneros, Países, Ranking, Catálogo, Personas), con el tema visual y la navegación.
-- `messaging-center-ui`: vista que hace observable la mensajería en tiempo real y permite ejecutar escenarios de demostración (pausa del consumidor, mensaje corrupto, duplicado, reintento de la DLQ).
+- `etl-pipeline`: extracción, limpieza, transformación y cálculo de agregados del catálogo en Python, y publicación confirmada como mensajes.
+- `messaging-ingestion`: colas RabbitMQ, contratos de mensajes y consumidores .NET que persisten en Cassandra de forma idempotente, con reintentos y DLQ.
+- `cassandra-data-mart`: keyspace y tablas orientadas a consultas y de agregados en Cassandra.
+- `dashboard-ui`: vistas analíticas y vista de Mensajería en Blazor, con actualización en tiempo real.
 
 ### Modified Capabilities
 
@@ -42,9 +42,9 @@ _Ninguna._ No existen especificaciones previas en `openspec/specs/`.
 
 ## Impact
 
-- **Repositorio:** se crean `docker-compose.yml`, `cassandra/schema.cql`, `etl/` (Python), `src/Netflix.Contracts`, `src/Netflix.Core`, `src/Netflix.Ingestion`, `src/Netflix.Web` y `tests/`. El README se corrige para reflejar este alcance.
+- **Repositorio:** se crean `docker-compose.yml`, `cassandra/schema.cql`, `etl/` (Python), `src/Netflix.App/` (.NET) y `tests/`. El README se corrige para reflejar este alcance.
 - **Dependencias:**
   - Python: `pandas`, `pika`, `pytest`.
-  - .NET: `MassTransit.RabbitMQ` 8.x, `CassandraCSharpDriver`, `MudBlazor`, `Blazor-ApexCharts`, SignalR (incluido en ASP.NET Core) y `xUnit`.
-- **Infraestructura:** imágenes Docker de `cassandra:5` y `rabbitmq:management`. Puertos 9042 (CQL), 5672/15672 (AMQP y Management) y 8080 (web).
-- **Fuera de alcance:** autenticación de usuarios, despliegue en la nube, clúster multinodo de Cassandra, edición de datos desde la UI (es solo lectura, salvo los controles de demo de mensajería) y Power BI.
+  - .NET: `MassTransit.RabbitMQ` 8.x, `CassandraCSharpDriver`, `MudBlazor`, `Blazor-ApexCharts` y `xUnit`.
+- **Infraestructura:** imágenes `cassandra:5.0` y `rabbitmq:4-management`. Puertos 9042, 5672, 15672 y 8080.
+- **Fuera de alcance:** API REST pública, autenticación, nube, clúster multinodo, mapa geográfico, edición de datos desde la UI y Power BI.

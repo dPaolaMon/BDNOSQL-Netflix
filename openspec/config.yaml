@@ -4,11 +4,12 @@ context: |
   Proyecto escolar de Bases de Datos NoSQL: plataforma "Netflix Analytics" sobre el
   catálogo de Netflix de Kaggle (archive/titles.csv, archive/credits.csv).
   - Todos los artefactos se escriben en español.
+  - Principio rector: KISS. Preferir lo que el framework ya da gratis a mecanismos propios.
   - Stack obligatorio: Python (ETL), RabbitMQ + MassTransit 8.x (mensajería
     transaccional), Apache Cassandra 5 (almacenamiento), .NET 10 (backend),
     Blazor Web App Interactive Server + MudBlazor + ApexCharts (frontend).
+  - Una sola aplicación .NET (consumidores + consultas + Blazor). Sin API REST, sin MediatR.
   - Power BI está descartado; la visualización es solo Blazor.
-  - Sin MediatR: CQRS con clases propias. MassTransit se mantiene en 8.x (v9 es comercial).
   - Un solo camino de escritura: Python ETL -> RabbitMQ -> consumidor .NET -> Cassandra.
   - "Data Mart" significa Data Mart NoSQL orientado a consultas (tablas por consulta +
     agregados precalculados), nunca un esquema estrella con JOINs.
