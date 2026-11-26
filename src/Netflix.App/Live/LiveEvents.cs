@@ -41,7 +41,9 @@ public sealed class LiveEvents
         lock (_lock)
         {
             LastTitle = title;
-            Position = title.Position;
+            // Los consumidores terminan en desorden: se queda la posición mayor. Un salto grande
+            // hacia atrás significa que empezó otra corrida del ETL.
+            if (title.Position > Position || Position - title.Position > FeedSize) Position = title.Position;
             TotalTitles = title.TotalTitles;
             Add(saved);
         }

@@ -38,9 +38,9 @@ En la sesión de código, cada grupo es un PR.
 
 ## 6. Integración y demo (todo el equipo)
 
-- [ ] 6.1 Prueba desde cero: `docker compose down -v && docker compose up -d --build && docker compose run --rm etl`. Verificar: el Resumen muestra 6,137 títulos.
-- [ ] 6.2 Prueba de durabilidad: `docker compose stop app` a mitad de la carga y luego `start`. Verificar: la cola baja a 0 y siguen siendo 6,137 títulos.
-- [ ] 6.3 Correr `pytest` y `dotnet test`. Verificar que todo pasa en verde.
+- [x] 6.1 Prueba desde cero: `docker compose down -v && docker compose up -d --build && docker compose run --rm etl`. Verificar: el Resumen muestra 6,137 títulos.
+- [x] 6.2 Prueba de durabilidad: `docker compose stop app` a mitad de la carga y luego `start`. Verificar: la cola baja a 0 y siguen siendo 6,137 títulos.
+- [x] 6.3 Correr `pytest` y `dotnet test`. Verificar que todo pasa en verde.
 - [ ] 6.4 Escribir el guion de demo (≤ 10 min) y ensayarlo. Actualizar el README con capturas.
 
 ## Workflow follow-up

@@ -175,6 +175,8 @@ Tema: fondo `#141414`, superficie `#1F1F1F`, acento y películas `#E50914`, seri
 | `app` | build `src/Netflix.App` | Puerto 8080. Arranca cuando Cassandra y RabbitMQ están listos |
 | `etl` | build `etl/` | `profiles: [tools]`: solo corre con `docker compose run --rm etl` |
 
+Cada servicio tiene un límite de `cpus` (Cassandra 1.0; los demás 0.5) para que un portátil de 2 CPU no se sature, y Cassandra un `start_period` de 90 s. El puerto de la app se puede cambiar con `APP_PORT` (8080 por defecto).
+
 ### D12. Reglas de limpieza del ETL
 
 | Campo | Regla |

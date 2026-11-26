@@ -7,6 +7,38 @@
 
 > La documentación técnica completa (propuesta, diseño, especificaciones, tareas y cronograma) está en [`openspec/changes/netflix-analytics-platform/`](openspec/changes/netflix-analytics-platform/).
 
+## Cómo ejecutarlo
+
+Requisitos: Docker con Compose, unos 2 GB de RAM libres y los puertos 8080, 5672, 15672 y 9042.
+
+```bash
+docker compose up -d --build           # Cassandra, esquema, RabbitMQ y la app
+docker compose run --rm etl            # carga el catálogo
+docker compose run --rm etl --rate 60  # carga lenta (~100 s), para la demo
+docker compose down -v                 # reinicio total: borra los datos
+```
+
+- Dashboard: <http://localhost:8080> (si el puerto está ocupado: `APP_PORT=8081 docker compose up -d`).
+- RabbitMQ: <http://localhost:15672> (usuario y contraseña `guest`).
+- Si cambias el código del ETL, reconstruye su imagen: `docker compose --profile tools build etl`.
+
+Pruebas:
+
+```bash
+pip install -r etl/requirements.txt && pytest etl/tests
+docker compose up -d cassandra && dotnet test   # usan el keyspace aparte netflix_mart_test
+```
+
+Más detalle: [informe técnico](docs/INFORME.md) y [guion de demo](docs/GUION-DEMO.md).
+
+| Resumen | Mensajería |
+|---|---|
+| ![Resumen](docs/img/resumen.png) | ![Mensajería](docs/img/mensajeria.png) |
+| **Detalle de título** | **Ranking** |
+| ![Detalle](docs/img/detalle.png) | ![Ranking](docs/img/ranking.png) |
+| **Personas** | |
+| ![Personas](docs/img/personas.png) | |
+
 ## 1. Definición del problema
 
 Procesar y analizar volúmenes significativos de datos de fuentes heterogéneas, como catálogos y créditos de producciones, choca con límites de rendimiento y flexibilidad en los esquemas relacionales tradicionales. Las consultas que cruzan títulos con sus créditos y los agregan por género, año o país dependen de `JOIN` y `GROUP BY` costosos. Además, la carga de datos compite con las lecturas.
