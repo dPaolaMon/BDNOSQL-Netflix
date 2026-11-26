@@ -11,9 +11,9 @@ En la sesión de código, cada grupo es un PR.
 
 ## 2. ETL en Python (DM + JC)
 
-- [ ] 2.1 (DM) Implementar `extract.py` y `transform.py` (reglas de D12, validación y reparto embebido). Verificar con pytest: 6,137 títulos leídos, géneros como lista, `NR`, seasons nulo en películas, y Rocky con Stallone.
-- [ ] 2.2 (DM) Implementar `aggregate.py` (kpis, by_year, by_genre, by_country, ranking, top_people). Verificar con pytest: KPIs 6,137 / 3,831 / 2,306 / 56,754, y que los títulos con menos de 1,000 votos quedan fuera del ranking IMDb.
-- [ ] 2.3 (JC) Implementar `publish.py` y `main.py` con pika: confirms, mensajes persistentes, `--rate`, KPIs al final y resumen en consola. Verificar: `docker compose run --rm etl` termina con código 0 y la UI de RabbitMQ muestra los mensajes en las 2 colas.
+- [x] 2.1 (DM) Implementar `extract.py` y `transform.py` (reglas de D12, validación y reparto embebido). Verificar con pytest: 6,137 títulos leídos, géneros como lista, `NR`, seasons nulo en películas, y Rocky con Stallone.
+- [x] 2.2 (DM) Implementar `aggregate.py` (kpis, by_year, by_genre, by_country, ranking, top_people). Verificar con pytest: KPIs 6,137 / 3,831 / 2,306 / 56,754, y que los títulos con menos de 1,000 votos quedan fuera del ranking IMDb.
+- [x] 2.3 (JC) Implementar `publish.py` y `main.py` con pika: confirms, mensajes persistentes, `--rate`, KPIs al final y resumen en consola. Verificar: `docker compose run --rm etl` termina con código 0 y la UI de RabbitMQ muestra los mensajes en las 2 colas.
 
 ## 3. App .NET: mensajería y escritura (JC + FB)
 
