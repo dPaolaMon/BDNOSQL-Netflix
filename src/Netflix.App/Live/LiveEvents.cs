@@ -18,6 +18,8 @@ public sealed class LiveEvents
 {
     public const int FeedSize = 100;
     public const int HistorySeconds = 60;
+    /// <summary>Retroceso de posición a partir del cual se asume otra corrida (mayor que el desorden del consumo).</summary>
+    private const int NewRunThreshold = 100;
 
     private readonly object _lock = new();
     private readonly LinkedList<TitleEvent> _feed = new();
@@ -43,7 +45,7 @@ public sealed class LiveEvents
             LastTitle = title;
             // Los consumidores terminan en desorden: se queda la posición mayor. Un salto grande
             // hacia atrás significa que empezó otra corrida del ETL.
-            if (title.Position > Position || Position - title.Position > FeedSize) Position = title.Position;
+            if (title.Position > Position || Position - title.Position > NewRunThreshold) Position = title.Position;
             TotalTitles = title.TotalTitles;
             Add(saved);
         }
