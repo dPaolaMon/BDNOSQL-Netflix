@@ -6,8 +6,8 @@ En la sesión de código, cada grupo es un PR.
 
 ## 1. Infraestructura (DM)
 
-- [ ] 1.1 Crear `docker-compose.yml` con `cassandra`, `cassandra-init`, `rabbitmq` (con `rabbitmq.conf`: `collect_statistics_interval = 1000`), `app` y `etl` (perfil `tools`). Verificar: `docker compose up -d` deja Cassandra y RabbitMQ healthy.
-- [ ] 1.2 Escribir `cassandra/schema.cql` con el keyspace y las 9 tablas de design D5, todo con `IF NOT EXISTS`. Verificar: `cassandra-init` termina con código 0, y otra vez con código 0 al reejecutarlo.
+- [x] 1.1 Crear `docker-compose.yml` con `cassandra`, `cassandra-init`, `rabbitmq` (con `rabbitmq.conf`: `collect_statistics_interval = 1000`), `app` y `etl` (perfil `tools`). Verificar: `docker compose up -d` deja Cassandra y RabbitMQ healthy.
+- [x] 1.2 Escribir `cassandra/schema.cql` con el keyspace y las 9 tablas de design D5, todo con `IF NOT EXISTS`. Verificar: `cassandra-init` termina con código 0, y otra vez con código 0 al reejecutarlo.
 
 ## 2. ETL en Python (DM + JC)
 

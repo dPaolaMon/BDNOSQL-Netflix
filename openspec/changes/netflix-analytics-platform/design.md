@@ -123,7 +123,7 @@ Cassandra no hace JOINs ni `GROUP BY` entre particiones, así que hay **una tabl
 |---|---|---|
 | `titles_by_id` (reparto embebido como `list<frozen<credit>>`) | `(id)` | Detalle de título y carga del catálogo |
 | `titles_by_genre` | `((genre), imdb_score, id)`, `imdb_score DESC` | Resumen → clic en un género |
-| `credits_by_person` | `((person_id), release_year, title_id)`, `release_year DESC` | Personas → filmografía |
+| `credits_by_person` | `((person_id), release_year, title_id, role)`, `release_year DESC` | Personas → filmografía |
 | `kpis` | `(name)` | Tarjetas KPI |
 | `agg_by_year` | `((type), release_year)` | Gráfica de estrenos por año |
 | `agg_by_genre` | `((scope), genre)` | Barras de géneros |

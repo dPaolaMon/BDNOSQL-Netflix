@@ -1,0 +1,73 @@
+name: netflix-analytics
+
+services:
+  cassandra:
+    image: cassandra:5.0
+    environment:
+      MAX_HEAP_SIZE: 1G
+      HEAP_NEWSIZE: 200M
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "DESCRIBE KEYSPACES"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+
+  cassandra-init:
+    image: cassandra:5.0
+    entrypoint: ["cqlsh", "cassandra", "-f", "/schema.cql"]
+    volumes:
+      - ./cassandra/schema.cql:/schema.cql:ro
+    depends_on:
+      cassandra:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    # Nombre fijo: RabbitMQ guarda sus colas bajo el nombre del nodo.
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/20-netflix.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  app:
+    build: ./src/Netflix.App
+    environment:
+      Cassandra__Host: cassandra
+      RabbitMq__Host: rabbitmq
+      ASPNETCORE_HTTP_PORTS: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      cassandra-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  etl:
+    build: ./etl
+    profiles: [tools]
+    environment:
+      DATA_DIR: /data
+      RABBITMQ_HOST: rabbitmq
+    volumes:
+      - ./archive:/data:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  cassandra_data:
+  rabbitmq_data:
