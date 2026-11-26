@@ -105,7 +105,7 @@ En .NET, cada cola usa `UseRawJsonDeserializer()`, `ConfigureConsumeTopology = f
   "genres": ["drama","sport"], "production_countries": ["US"],
   "imdb_score": 8.1, "imdb_votes": 588100, "tmdb_popularity": 106.361, "tmdb_score": 7.782,
   "credits": [ { "person_id": 3180, "name": "Sylvester Stallone", "character": "Robert \"Rocky\" Balboa", "role": "ACTOR" } ],
-  "total_titles": 6137 }            // para la barra de progreso
+  "position": 2, "total_titles": 6137 }   // position / total_titles = barra de progreso
 // routing key "aggregate"
 { "kind": "by_genre", "rows": [ { "genre": "drama", "total": 3120, "movies": 2001, "shows": 1119, "avg_imdb": 6.7 } ] }
 ```
@@ -147,13 +147,13 @@ pandas tiene todo el dataset en memoria, así que un `groupby` es trivial y exac
 ### D8. Lectura y catálogo
 `DashboardQueries` tiene un método por gráfica, y cada uno lee una partición.
 
-El **Catálogo** carga `titles_by_id` completo una sola vez (~6k filas), lo guarda en memoria y filtra ahí: texto, tipo y género. La caché se refresca cuando llega el agregado `kpis`, que es el último de cada corrida.
+El **Catálogo** carga `titles_by_id` completo una sola vez (~6k filas), lo guarda en memoria y filtra ahí: texto, tipo y género. La caché se refresca cuando llega el agregado `kpis`, que es el último que publica cada corrida. Como `kpis` viaja por otra cola y puede procesarse antes que los títulos pendientes, la caché solo se conserva si ya tiene tantos títulos como indica el KPI; si no, se vuelve a leer la próxima vez.
 *Alternativa descartada:* índices secundarios (SAI), que no aportan nada a este volumen.
 
 ### D9. Vista Mensajería
 - **Diagrama sencillo** (cajas de MudBlazor): ETL → exchange → cola de títulos / cola de agregados / cola de errores → app → Cassandra. Cada cola muestra **mensajes en espera y consumidores**, con números que se actualizan.
 - **Gráfica** de mensajes por segundo (publicados y entregados) de los últimos 60 s.
-- **Barra de progreso** de la corrida (títulos recibidos / `total_titles`) y **feed** de los últimos 100 eventos: nuevo, actualizado o error.
+- **Barra de progreso** de la corrida (`position` / `total_titles` del último título procesado; así sobrevive a un reinicio de la app y empieza de cero en cada corrida) y **feed** de los últimos 100 eventos: nuevo, actualizado o error.
 - Un `QueueStatsPoller` (BackgroundService) consulta cada 2 s `GET /api/queues` de la **Management API** de RabbitMQ y lo publica en `LiveEvents`.
 - **Dos botones de demo** (`DemoPublisher`):
   - **Inyectar corrupto:** publica a la cola de títulos un JSON sin `id`. Se ven los reintentos fallar, el mensaje llega a `catalog-titles_error` y el contador de errores sube.

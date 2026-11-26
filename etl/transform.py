@@ -74,7 +74,8 @@ def transform(titles, credits):
     cast = group_credits(credits)
     cleaned = [clean_title(row) for row in titles.to_dict("records")]
     valid = [title for title in cleaned if title is not None]
-    for title in valid:
+    for position, title in enumerate(valid, start=1):
         title["credits"] = cast.get(title["id"], [])
-        title["total_titles"] = len(valid)  # para la barra de progreso
+        title["position"] = position  # position / total_titles = barra de progreso
+        title["total_titles"] = len(valid)
     return valid, len(cleaned) - len(valid)

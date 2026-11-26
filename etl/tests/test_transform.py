@@ -51,6 +51,7 @@ def test_omitidos_se_cuentan(raw):
     valid, skipped = transform(sample, credits)
     assert (len(valid), skipped) == (2, 1)
     assert all(title["total_titles"] == 2 for title in valid)
+    assert [title["position"] for title in valid] == [1, 2]
 
 
 def test_catalogo_completo(titles):

@@ -17,10 +17,10 @@ En la sesión de código, cada grupo es un PR.
 
 ## 3. App .NET: mensajería y escritura (JC + FB)
 
-- [ ] 3.1 (FB) Crear `src/Netflix.App` (Blazor Web App Interactive Server, .NET 10) y `tests/Netflix.App.Tests`, con `CassandraSession` (sentencias preparadas y UDT `credit`). Verificar: `dotnet build` en verde y la app se conecta a Cassandra al arrancar.
-- [ ] 3.2 (JC) Configurar MassTransit: 2 colas con JSON plano, bindings y `Interval(3, 1s)`. Verificar: en la UI de RabbitMQ aparecen las colas con 1 consumidor.
-- [ ] 3.3 (JC) Implementar `TitleConsumer` + `TitleWriter` (validar, comprobar si existe, hacer upsert en las 3 tablas y emitir evento). Verificar con el test harness: título nuevo → evento "nuevo"; repetido → "ya existía" y una sola fila.
-- [ ] 3.4 (JC) Implementar `AggregateConsumer` y `FaultConsumer`. Verificar: tras una carga completa, `SELECT * FROM kpis` tiene valores y un mensaje sin `id` termina en `catalog-titles_error` con su evento de error.
+- [x] 3.1 (FB) Crear `src/Netflix.App` (Blazor Web App Interactive Server, .NET 10) y `tests/Netflix.App.Tests`, con `CassandraSession` (sentencias preparadas y UDT `credit`). Verificar: `dotnet build` en verde y la app se conecta a Cassandra al arrancar.
+- [x] 3.2 (JC) Configurar MassTransit: 2 colas con JSON plano, bindings y `Interval(3, 1s)`. Verificar: en la UI de RabbitMQ aparecen las colas con 1 consumidor.
+- [x] 3.3 (JC) Implementar `TitleConsumer` + `TitleWriter` (validar, comprobar si existe, hacer upsert en las 3 tablas y emitir evento). Verificar con el test harness: título nuevo → evento "nuevo"; repetido → "ya existía" y una sola fila.
+- [x] 3.4 (JC) Implementar `AggregateConsumer` y `FaultConsumer`. Verificar: tras una carga completa, `SELECT * FROM kpis` tiene valores y un mensaje sin `id` termina en `catalog-titles_error` con su evento de error.
 
 ## 4. App .NET: consultas y vistas (FB + XJ)
 
