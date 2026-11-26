@@ -24,11 +24,11 @@ En la sesión de código, cada grupo es un PR.
 
 ## 4. App .NET: consultas y vistas (FB + XJ)
 
-- [ ] 4.1 (FB) Implementar `DashboardQueries` (un método por gráfica y caché del catálogo en memoria). Verificar con xUnit/integración: cada método devuelve datos y la búsqueda de "rocky" encuentra Rocky.
-- [ ] 4.2 (XJ) Crear el layout con MudBlazor: tema oscuro, barra lateral con 5 vistas y estados de carga y vacío. Verificar: la navegación funciona y aparece el mensaje de "sin datos" con la base vacía.
-- [ ] 4.3 (XJ) Vista Resumen (KPIs, área por año, barras de géneros con panel, top países, dona). Verificar: muestra 6,137 títulos y el clic en drama abre sus títulos.
-- [ ] 4.4 (XJ) Vista Catálogo con búsqueda, filtros y panel de detalle. Verificar: "rocky" + Películas → Rocky, con IMDb 8.1 y su reparto.
-- [ ] 4.5 (XJ) Vistas Ranking y Personas. Verificar: el top de series IMDb muestra 50 elementos y el clic en un actor muestra su filmografía.
+- [x] 4.1 (FB) Implementar `DashboardQueries` (un método por gráfica y caché del catálogo en memoria). Verificar con xUnit/integración: cada método devuelve datos y la búsqueda de "rocky" encuentra Rocky.
+- [x] 4.2 (XJ) Crear el layout con MudBlazor: tema oscuro, barra lateral con 5 vistas y estados de carga y vacío. Verificar: la navegación funciona y aparece el mensaje de "sin datos" con la base vacía.
+- [x] 4.3 (XJ) Vista Resumen (KPIs, área por año, barras de géneros con panel, top países, dona). Verificar: muestra 6,137 títulos y el clic en drama abre sus títulos.
+- [x] 4.4 (XJ) Vista Catálogo con búsqueda, filtros y panel de detalle. Verificar: "rocky" + Películas → Rocky, con IMDb 8.1 y su reparto.
+- [x] 4.5 (XJ) Vistas Ranking y Personas. Verificar: el top de series IMDb muestra 50 elementos y el clic en un actor muestra su filmografía.
 
 ## 5. Vista Mensajería (FB + XJ + JC)
 

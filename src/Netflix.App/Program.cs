@@ -1,4 +1,6 @@
 using System.Globalization;
+using ApexCharts;
+using MudBlazor.Services;
 using Netflix.App.Components;
 using Netflix.App.Data;
 using Netflix.App.Live;
@@ -14,7 +16,10 @@ builder.Services.AddSingleton<CassandraSession>();
 builder.Services.AddSingleton<TitleWriter>();
 builder.Services.AddSingleton<AggregateWriter>();
 builder.Services.AddSingleton<LiveEvents>();
+builder.Services.AddSingleton<DashboardQueries>();
 builder.Services.AddCatalogMessaging(builder.Configuration);
+builder.Services.AddMudServices();
+builder.Services.AddApexCharts();
 
 var app = builder.Build();
 

@@ -56,6 +56,9 @@ public sealed class ConsumerTests(CassandraFixture cassandra)
         await using var provider = Provider();
         var harness = provider.GetRequiredService<ITestHarness>();
         var live = provider.GetRequiredService<LiveEvents>();
+        // Las clases de prueba comparten keyspace: este caso necesita partir de cero.
+        foreach (var table in new[] { "titles_by_id", "titles_by_genre", "credits_by_person" })
+            await cassandra.Session.ExecuteAsync($"TRUNCATE {table}");
         await harness.Start();
 
         await harness.Bus.Publish(Rocky());
