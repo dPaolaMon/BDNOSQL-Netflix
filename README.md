@@ -1,4 +1,4 @@
-# Propuesta Técnica: Data Mart NoSQL de el catálogo de Netflix 
+# Propuesta Técnica: Dashboard NoSQL de el catálogo de Netflix 
 1. Definición del problema
 El procesamiento y análisis de volúmenes significativos de datos provenientes de
 fuentes heterogéneas (como catálogos y créditos de producciones) a menudo
@@ -51,7 +51,7 @@ asociado a múltiples registros de créditos (credits.csv).
 |---|---|---|
 | Python | Capa de Procesamiento (ETL) | Extracción de los archivos `titles.csv` y `credits.csv`, limpieza, transformación y preparación de los datos originales. |
 | Apache Cassandra | Capa de Almacenamiento NoSQL | Modelado de datos orientado a consultas y almacenamiento estructurado del Data Mart. |
-| Power BI (Opcional) | Capa de Presentación | Generación de paneles de visualización y consulta avanzada sobre el Data Mart. |
+|  | Capa de Presentación | Generación de paneles de visualización y consulta avanzada sobre el Data Mart. |
 6. Arquitectura del Flujo de Datos
 Fase del Flujo Componente /
 Herramienta
@@ -89,8 +89,27 @@ de control
 | 2. Pipeline ETL | Python | Ejecución de scripts para la extracción, limpieza, transformación y estructuración de los datos. |
 | 3. Modelado NoSQL | Apache Cassandra | Diseño del esquema desnormalizado orientado a consultas para optimizar el rendimiento del almacenamiento. |
 | 4. Capa Analítica | Data Mart | Consolidación de los datos organizados específicamente para responder a las consultas del negocio. |
-| 5. Explotación / BI (Opcional) | Power BI | Conexión opcional al Data Mart para la visualización gráfica de los resultados y la creación de tableros de control. |
+| 5. Explotación |  | Conexión opcional al Data Mart para la visualización gráfica de los resultados y la creación de tableros de control. |
 ### 7. Arquitectura propuesta
 ### Diagrama de Arquitectura
 
 ![Diagrama de arquitectura del proyecto](IMG_0737.jpg)
+
+
+
+# 8. CRONOGRAMA
+
+Inicio: 3 de Noviembre de 2026
+
+Entrega:  27 de Noviembre de 2026
+
+
+
+## 9. Integrantes
+
+### Asignación de Roles del Equipo
+
+- **Diana Paola Montes:** Líder de Datos NoSQL & Pipeline ETL (Cassandra, Docker y Python).
+- **Jonathan Cervantes:** Ingeniero de Mensajería & Consumidores (RabbitMQ, MassTransit e Idempotencia).
+- **Fernanda Baez:** Ingeniera de Backend .NET & APIs (ASP.NET Core, MediatR CQRS y SignalR).
+- **Ximena Jasso:** Ingeniera de Frontend Blazor & UI/UX (Blazor WASM, MudBlazor y Validación).
