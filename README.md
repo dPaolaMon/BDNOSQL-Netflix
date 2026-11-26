@@ -152,53 +152,7 @@ Para demostrar la durabilidad basta con `docker compose stop app`: los mensajes 
 
 ![Diagrama de arquitectura original del proyecto](IMG_0737.jpg)
 
-## 8. Cronograma
-
-- **Inicio:** 3 de noviembre de 2026
-- **Entrega:** 27 de noviembre de 2026
-
-```mermaid
-gantt
-    title Netflix Analytics · 3 al 27 de noviembre de 2026
-    dateFormat YYYY-MM-DD
-    axisFormat %d %b
-    excludes weekends
-    todayMarker off
-
-    section Equipo completo
-    Kickoff y definición de arquitectura        :done, t1, 2026-11-03, 2d
-    Integración y pruebas                   :t2, 2026-11-23, 2d
-    Guion de demo, README y ensayo          :t3, 2026-11-25, 2d
-    Entrega                                     :milestone, crit, m1, 2026-11-27, 0d
-
-    section Diana Paola Montes · Datos y ETL
-    Análisis de datasets                        :d1, 2026-11-05, 2d
-    Docker Compose y schema CQL             :d2, 2026-11-09, 2d
-    ETL limpieza y reparto                  :d3, 2026-11-11, 3d
-    Agregados                               :d4, 2026-11-16, 2d
-
-    section Jonathan Cervantes · Mensajería
-    Colas y contratos de mensajes               :j1, 2026-11-05, 2d
-    Publisher Python con confirms           :j2, 2026-11-09, 2d
-    Consumidores y escritura en Cassandra   :crit, j3, 2026-11-11, 5d
-    Botones de demo, DLQ y duplicados       :j4, 2026-11-18, 3d
-
-    section Fernanda Baez · Backend .NET
-    App .NET y conexión a Cassandra         :f1, 2026-11-05, 2d
-    Servicios de consulta                   :f2, 2026-11-09, 5d
-    Caché del catálogo                      :f3, 2026-11-16, 2d
-    LiveEvents y poller de colas            :f4, 2026-11-18, 3d
-
-    section Ximena Jasso · Frontend Blazor
-    Mockups y tema visual                       :x1, 2026-11-05, 2d
-    Layout y vista Resumen                  :x2, 2026-11-09, 5d
-    Catálogo, Ranking y Personas            :x3, 2026-11-16, 5d
-    Vista Mensajería                        :crit, x4, 2026-11-23, 2d
-```
-
-Los hitos, la ruta crítica y el detalle de tareas están en [`cronograma.md`](openspec/changes/netflix-analytics-platform/cronograma.md) y [`tasks.md`](openspec/changes/netflix-analytics-platform/tasks.md).
-
-## 9. Integrantes
+## 8. Integrantes
 
 ### Asignación de roles del equipo
 
@@ -207,12 +161,3 @@ Los hitos, la ruta crítica y el detalle de tareas están en [`cronograma.md`](o
 - **Fernanda Baez:** Ingeniera de Backend .NET & APIs (ASP.NET Core y Cassandra).
 - **Ximena Jasso:** Ingeniera de Frontend Blazor & UI/UX (Blazor Interactive Server, MudBlazor y Validación).
 
-## 10. Documentación
-
-| Documento | Contenido |
-|---|---|
-| [Propuesta](openspec/changes/netflix-analytics-platform/proposal.md) | Por qué, qué cambia, capacidades e impacto |
-| [Diseño](openspec/changes/netflix-analytics-platform/design.md) | Arquitectura, colas, modelo Cassandra, decisiones y mockups |
-| [Especificaciones](openspec/changes/netflix-analytics-platform/specs/) | `etl-pipeline`, `messaging-ingestion`, `cassandra-data-mart`, `dashboard-ui` |
-| [Tareas](openspec/changes/netflix-analytics-platform/tasks.md) | Plan de implementación por integrante, con verificación por tarea |
-| [Cronograma](openspec/changes/netflix-analytics-platform/cronograma.md) | Gantt, hitos y ruta crítica |
