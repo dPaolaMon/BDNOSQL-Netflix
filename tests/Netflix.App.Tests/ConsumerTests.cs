@@ -51,6 +51,16 @@ public sealed class ConsumerTests(CassandraFixture cassandra)
     }
 
     [Fact]
+    public void El_duplicado_de_demo_respeta_el_contrato()
+    {
+        var json = DemoPublisher.Serialize(Rocky());
+
+        Assert.Contains("\"release_year\":1976", json);
+        Assert.Contains("\"person_id\":3180", json);
+        Assert.Contains("\"id\":\"tm82169\"", json);
+    }
+
+    [Fact]
     public async Task Titulo_nuevo_y_repetido()
     {
         await using var provider = Provider();

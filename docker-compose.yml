@@ -1,7 +1,9 @@
 name: netflix-analytics
 
+# Los límites de `cpus` son para un portátil de 2 CPU (ver README).
 services:
   cassandra:
+    cpus: 1.0
     image: cassandra:5.0
     environment:
       MAX_HEAP_SIZE: 1G
@@ -13,11 +15,12 @@ services:
     healthcheck:
       test: ["CMD", "cqlsh", "-e", "DESCRIBE KEYSPACES"]
       interval: 10s
-      timeout: 10s
+      timeout: 20s
       retries: 30
-      start_period: 40s
+      start_period: 90s
 
   cassandra-init:
+    cpus: 0.5
     image: cassandra:5.0
     entrypoint: ["cqlsh", "cassandra", "-f", "/schema.cql"]
     volumes:
@@ -27,6 +30,7 @@ services:
         condition: service_healthy
 
   rabbitmq:
+    cpus: 0.5
     image: rabbitmq:4-management
     # Nombre fijo: RabbitMQ guarda sus colas bajo el nombre del nodo.
     hostname: rabbitmq
@@ -43,6 +47,7 @@ services:
       retries: 10
 
   app:
+    cpus: 0.5
     build: ./src/Netflix.App
     environment:
       Cassandra__Host: cassandra
@@ -57,6 +62,7 @@ services:
         condition: service_healthy
 
   etl:
+    cpus: 0.5
     build: ./etl
     profiles: [tools]
     environment:

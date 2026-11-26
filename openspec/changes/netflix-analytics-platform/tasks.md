@@ -32,9 +32,9 @@ En la sesión de código, cada grupo es un PR.
 
 ## 5. Vista Mensajería (FB + XJ + JC)
 
-- [ ] 5.1 (FB) Implementar `LiveEvents` (singleton con eventos C#) y `QueueStatsPoller` (Management API cada 2 s). Verificar: con la app corriendo, el log muestra las colas y sus mensajes en espera.
-- [ ] 5.2 (XJ) Vista Mensajería con diagrama y contadores por cola, gráfica msg/s, barra de progreso y feed (100). Verificar: durante `docker compose run --rm etl --rate 60` la barra avanza y el feed se llena.
-- [ ] 5.3 (JC) Implementar `DemoPublisher` y los botones "Inyectar corrupto" y "Reenviar duplicado". Verificar: el corrupto llega a la cola de errores (contador +1) y el duplicado aparece como "ya existía" sin cambiar el KPI.
+- [x] 5.1 (FB) Implementar `LiveEvents` (singleton con eventos C#) y `QueueStatsPoller` (Management API cada 2 s). Verificar: con la app corriendo, el log muestra las colas y sus mensajes en espera.
+- [x] 5.2 (XJ) Vista Mensajería con diagrama y contadores por cola, gráfica msg/s, barra de progreso y feed (100). Verificar: durante `docker compose run --rm etl --rate 60` la barra avanza y el feed se llena.
+- [x] 5.3 (JC) Implementar `DemoPublisher` y los botones "Inyectar corrupto" y "Reenviar duplicado". Verificar: el corrupto llega a la cola de errores (contador +1) y el duplicado aparece como "ya existía" sin cambiar el KPI.
 
 ## 6. Integración y demo (todo el equipo)
 

@@ -18,6 +18,9 @@ builder.Services.AddSingleton<AggregateWriter>();
 builder.Services.AddSingleton<LiveEvents>();
 builder.Services.AddSingleton<DashboardQueries>();
 builder.Services.AddCatalogMessaging(builder.Configuration);
+builder.Services.AddRabbitManagement(builder.Configuration);
+builder.Services.AddHostedService<QueueStatsPoller>();
+builder.Services.AddSingleton<DemoPublisher>();
 builder.Services.AddMudServices();
 builder.Services.AddApexCharts();
 
